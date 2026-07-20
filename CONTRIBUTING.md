@@ -1,383 +1,289 @@
 # Contributing to BULB
 
-Thank you for your interest in contributing to BULB! This document provides guidelines and instructions for contributing to the project.
+Thanks for checking out BULB! 👋
 
-## Code of Conduct
+I'm happy that you're interested in contributing. Whether it's fixing a bug, improving performance, enhancing the visuals, or suggesting a new feature, every contribution is appreciated.
 
-This project adheres to the Contributor Covenant [code of conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct/). By participating, you are expected to uphold this code.
-
-## How to Contribute
-
-### Reporting Bugs
-
-Before submitting a bug report, please check the existing issues to avoid duplicates.
-
-**To submit a bug report:**
-
-1. Use a clear, descriptive title
-2. Include your environment (browser, OS, device type)
-3. Describe the exact steps to reproduce the issue
-4. Provide specific examples to demonstrate the steps
-5. Describe the behavior you observed and what you expected
-6. Include screenshots or screen recordings if applicable
-
-**Example bug report:**
-```
-Title: Audio reactivity not working on Firefox
-
-Environment: Firefox 120, Windows 11, AMD GPU
-
-Steps to reproduce:
-1. Click the Mic button
-2. Allow microphone access
-3. Play music
-4. Observe the fractal
-
-Expected: Fractal parameters change based on audio
-Actual: No response, Mic button shows "live" but no effect
-```
-
-### Suggesting Enhancements
-
-**To submit a feature request:**
-
-1. Use a clear, descriptive title
-2. Provide a detailed description of the suggested enhancement
-3. Explain why this would be useful
-4. List some examples of how this feature would work
-5. Include mockups or diagrams if helpful
-
-### Submitting Pull Requests
-
-#### Development Setup
-
-1. **Fork the repository**
-   ```bash
-   # Create a fork on GitHub
-   ```
-
-2. **Clone your fork**
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/bulb.git
-   cd bulb
-   ```
-
-3. **Create a feature branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-4. **Make your changes**
-   - Edit files as needed
-   - Test thoroughly in multiple browsers
-   - Follow the code style guide below
-
-5. **Commit your changes**
-   ```bash
-   git commit -m "feat: add feature description"
-   git commit -m "fix: resolve issue description"
-   git commit -m "docs: update documentation"
-   ```
-
-6. **Push to your fork**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-7. **Create a Pull Request**
-   - Go to https://github.com/GAGANANAIR/bulb
-   - Click "New Pull Request"
-   - Select your feature branch
-   - Fill in the PR template (see below)
-   - Submit!
-
-#### Pull Request Template
-
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix (fixes #issue_number)
-- [ ] New feature (adds functionality)
-- [ ] Breaking change (affects existing functionality)
-- [ ] Documentation update
-
-## Changes Made
-- Change 1
-- Change 2
-- Change 3
-
-## Testing Done
-- Tested in Chrome/Firefox/Safari
-- Verified on mobile/desktop
-- Performance impact: minimal/moderate/significant
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Comments added for complex logic
-- [ ] No new console warnings/errors
-- [ ] Tested in multiple browsers
-- [ ] Documentation updated if needed
-```
-
-## Code Style Guide
-
-### General Principles
-- Write **readable, self-documenting code**
-- Prefer **clarity over cleverness**
-- Keep functions **small and focused**
-- Add **comments for "why", not "what"**
-
-### JavaScript Style
-
-**Indentation & Formatting**
-```javascript
-// Use 2-space indentation
-function exampleFunction() {
-  const variable = value;
-  return variable;
-}
-
-// Use const by default, let when needed, avoid var
-const immutable = 42;
-let mutable = 0;
-
-// Space after keywords
-if (condition) {
-  // code
-}
-```
-
-**Naming Conventions**
-```javascript
-// Functions: camelCase, verb-first
-function calculateDistance(a, b) { }
-function parseJSON(data) { }
-
-// Variables & constants: camelCase
-const maxIterations = 14;
-let currentFrame = 0;
-
-// Private variables: prefixed with underscore (convention)
-const _internalCache = [];
-
-// Classes/Constructors: PascalCase
-class FractalRenderer { }
-```
-
-**Comments**
-```javascript
-// Good: explains WHY
-const renderScale = 0.8; // Scale down for low-end devices
-
-// Bad: explains WHAT
-const renderScale = 0.8; // Set render scale to 0.8
-
-// Complex logic: add comment block
-/**
- * Adapt render scale based on frame time history.
- * If frames drop below 13ms, increase quality (supersampling).
- * If frames exceed 26ms, reduce quality for stability.
- */
-function maybeAdaptScale(now, dt) {
-  // ...
-}
-```
-
-**Error Handling**
-```javascript
-// Be explicit about error cases
-try {
-  const gl = canvas.getContext('webgl');
-  if (!gl) {
-    throw new Error('WebGL not supported');
-  }
-} catch (error) {
-  showError('Failed to initialize: ' + error.message);
-  return;
-}
-```
-
-### GLSL Shader Style
-
-**Comments**
-```glsl
-// Clear, descriptive comments for shader logic
-// Compute signed distance estimate to Mandelbulb surface
-float mapDE(vec3 pos, out float trapOut) {
-  // ...
-}
-
-// Soft shadow computation with cone stepping
-float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
-  // ...
-}
-```
-
-**Naming**
-```glsl
-// Uniforms: u_ prefix
-uniform vec3 u_camPos;
-uniform float u_power;
-
-// Attributes: a_ prefix
-attribute vec2 a_pos;
-
-// Varyings: v_ prefix
-varying vec3 v_normal;
-
-// Local variables: camelCase
-vec3 rayOrigin = u_camPos;
-float distance = mapDE(position, trap);
-```
-
-### CSS Style
-
-**Organization**
-```css
-/* Use CSS custom properties (variables) */
-:root {
-  --color-primary: #c9903f;
-  --color-text: #ece6da;
-  --spacing-unit: 8px;
-}
-
-/* Group related rules */
-#deck {
-  /* Layout */
-  display: flex;
-  gap: var(--spacing-unit);
-  
-  /* Styling */
-  background: var(--panel);
-  border: 1px solid var(--line);
-  
-  /* Effects */
-  backdrop-filter: blur(6px);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
-}
-```
-
-**Selectors**
-```css
-/* Avoid deep nesting */
-.dial label .v { }  /* OK */
-#deck .dial .toggles button.active span { }  /* Too deep */
-
-/* Use semantic class names */
-.toggle-btn--active { }  /* Better than .btn-red */
-```
-
-## Performance Considerations
-
-When contributing code, consider:
-
-1. **GPU Performance**
-   - Minimize shader branching
-   - Reuse calculations when possible
-   - Use appropriate precision (highp vs mediump)
-
-2. **CPU Performance**
-   - Avoid allocating objects in render loop
-   - Cache DOM queries
-   - Use requestAnimationFrame efficiently
-
-3. **Memory**
-   - Clean up textures/buffers when resizing
-   - Release event listeners when needed
-   - Minimize texture memory footprint
-
-4. **Browser Compatibility**
-   - Test WebGL implementations across browsers
-   - Provide fallbacks for unsupported features
-   - Use feature detection, not user-agent detection
-
-## Testing Your Changes
-
-### Manual Testing Checklist
-
-- [ ] Works in Chrome (latest)
-- [ ] Works in Firefox (latest)
-- [ ] Works in Safari (latest)
-- [ ] Works on desktop resolution
-- [ ] Works on mobile resolution
-- [ ] Touch controls respond properly
-- [ ] No console errors or warnings
-- [ ] Performance remains stable
-- [ ] Audio reactivity functional (if applicable)
-- [ ] URL sharing works correctly
-
-### Performance Testing
-
-Use browser DevTools:
-
-```javascript
-// Profile rendering performance
-console.time('frame');
-// ... render logic ...
-console.timeEnd('frame');
-
-// Monitor memory usage
-console.memory.usedJSHeapSize / 1e6; // MB
-
-// Check WebGL stats
-gl.getParameter(gl.RENDERER); // GPU info
-```
-
-## Documentation
-
-When updating code, update documentation:
-
-- **Code comments** for complex algorithms
-- **README.md** for user-facing changes
-- **API documentation** if adding new functions
-- **Examples** for new features
-
-## Commit Message Guidelines
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:**
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation
-- `style:` Code style (no functional change)
-- `refactor:` Code refactor
-- `perf:` Performance improvement
-- `test:` Tests
-- `chore:` Build, dependencies, etc.
-
-**Examples:**
-```
-feat(audio): add frequency band analysis
-fix(rendering): resolve bloom texture binding issue
-docs: update shader parameter documentation
-perf(rendering): optimize sphere tracing step size
-```
-
-## Getting Help
-
-- **Questions?** Open a GitHub Discussion
-- **Bug?** File an issue with reproduction steps
-- **Design decision?** Open an issue for discussion before PR
-- **Communication?** Email gagananair1@gmail.com
-
-## Recognition
-
-Contributors will be recognized in:
-- This CONTRIBUTING.md file
-- Project release notes
-- README.md contributors section
+Before opening an issue or pull request, please read the guidelines below.
 
 ---
 
-Thank you for contributing to making BULB better! 🎨
+## Code of Conduct
+
+Please be respectful and constructive when interacting with others. This project follows the Contributor Covenant Code of Conduct.
+
+https://www.contributor-covenant.org/version/2/0/code_of_conduct/
+
+---
+
+# Reporting Bugs
+
+Before opening a new issue, please check if someone has already reported the same problem.
+
+When reporting a bug, try to include:
+
+- Browser and version
+- Operating system
+- Device (Desktop/Mobile)
+- Steps to reproduce the issue
+- Expected result
+- Actual result
+- Screenshots or recordings if possible
+
+### Example
+
+```text
+Title: Audio reactivity not working on Firefox
+
+Environment:
+Firefox 120
+Windows 11
+AMD GPU
+
+Steps:
+1. Click Mic
+2. Allow microphone access
+3. Play music
+
+Expected:
+The fractal reacts to audio.
+
+Actual:
+No audio response even though the microphone is active.
+```
+
+---
+
+# Suggesting Features
+
+Ideas are always welcome.
+
+If you're requesting a feature, try to explain:
+
+- What the feature does
+- Why it would improve BULB
+- How you imagine it working
+
+Mockups, sketches, or reference images are always helpful but not required.
+
+---
+
+# Development Setup
+
+### 1. Fork the repository
+
+Create your own fork on GitHub.
+
+### 2. Clone your fork
+
+```bash
+git clone https://github.com/YOUR-USERNAME/bulb.git
+cd bulb
+```
+
+### 3. Create a branch
+
+```bash
+git checkout -b feature/my-feature
+```
+
+### 4. Make your changes
+
+Please test your changes before opening a pull request.
+
+If your work affects rendering or shaders, try testing in at least Chrome and Firefox.
+
+### 5. Commit
+
+This project uses Conventional Commits.
+
+Examples:
+
+```bash
+git commit -m "feat: add bloom intensity control"
+git commit -m "fix: correct camera reset logic"
+git commit -m "docs: improve README examples"
+```
+
+### 6. Push
+
+```bash
+git push origin feature/my-feature
+```
+
+### 7. Open a Pull Request
+
+Describe what you changed and why.
+
+If your PR fixes an issue, mention it using:
+
+```
+Fixes #12
+```
+
+---
+
+# Pull Request Checklist
+
+Before opening a PR, please make sure:
+
+- [ ] The project builds successfully
+- [ ] No unnecessary files are included
+- [ ] The code follows the existing style
+- [ ] Documentation is updated if needed
+- [ ] No new console errors or warnings appear
+- [ ] Changes have been tested
+
+---
+
+# Code Style
+
+The project doesn't use a strict formatter, but please try to follow the existing style.
+
+### General
+
+- Keep code easy to read.
+- Prefer meaningful variable names.
+- Keep functions focused on one task.
+- Add comments only when they explain **why**, not **what**.
+
+### JavaScript
+
+```javascript
+function calculateDistance(a, b) {
+  return Math.abs(a - b);
+}
+
+const maxIterations = 14;
+let currentFrame = 0;
+```
+
+Use:
+
+- `const` whenever possible
+- `let` when values change
+- Avoid `var`
+
+---
+
+### CSS
+
+Use CSS variables whenever possible.
+
+```css
+:root {
+  --color-primary: #c9903f;
+  --color-text: #ece6da;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+```
+
+Try to avoid deeply nested selectors.
+
+---
+
+### GLSL
+
+Keep shader code readable.
+
+Use descriptive variable names and add comments around complex calculations.
+
+```glsl
+// Distance estimator
+float mapDE(vec3 p) {
+    ...
+}
+```
+
+---
+
+# Performance
+
+BULB is GPU-heavy, so performance matters.
+
+When possible:
+
+- Avoid unnecessary calculations in shaders.
+- Don't allocate new objects every frame.
+- Cache DOM lookups.
+- Reuse buffers instead of recreating them.
+- Clean up textures and WebGL resources when they're no longer needed.
+
+---
+
+# Testing
+
+Before opening a PR, check that everything still works.
+
+Recommended browsers:
+
+- Chrome
+- Firefox
+- Safari (if available)
+
+Also verify:
+
+- Desktop layout
+- Mobile layout
+- No console errors
+- Smooth rendering performance
+- Audio reactivity (if modified)
+
+---
+
+# Documentation
+
+If your changes affect how BULB works, please update the documentation.
+
+That may include:
+
+- README.md
+- Examples
+- Comments for complex code
+
+---
+
+# Commit Messages
+
+Use Conventional Commits.
+
+Examples:
+
+```text
+feat: add bloom effect
+
+fix: resolve WebGL context loss
+
+docs: update installation guide
+
+perf: reduce shader iterations
+
+refactor: simplify render pipeline
+```
+
+Common prefixes:
+
+- feat
+- fix
+- docs
+- style
+- refactor
+- perf
+- test
+- chore
+
+---
+
+# Need Help?
+
+If you have questions, feel free to:
+
+- Open a GitHub Discussion
+- Open an Issue
+- Contact me at **gagananair1@gmail.com**
+
+---
