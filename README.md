@@ -2,7 +2,7 @@
 
 A raymarched Mandelbulb — a 3D fractal rendered live in the browser using WebGL, by sphere-tracing a signed distance field. No polygons, no mesh: every pixel is computed directly from a distance function evaluated on the GPU.
 
-**[View it live](https://gagananair.github.io/bulb/)** *(enable GitHub Pages in repo settings to activate this link)*
+**[View it live](https://gagananair.github.io/bulb/)** 
 
 ## What it does
 
