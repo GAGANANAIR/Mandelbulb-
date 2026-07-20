@@ -22,7 +22,6 @@ git clone https://github.com/GAGANANAIR/bulb.git
 cd bulb
 open index.html   # or just double-click it
 ```
-
 ## Controls
 
 | Action | Effect |
@@ -34,6 +33,13 @@ open index.html   # or just double-click it
 | Hue slider | Shifts the color palette between warm and cool |
 | Drift button | Toggles automatic camera rotation |
 | Reset button | Restores default camera and parameters |
+
+##Images
+
+<img width="946" height="410" alt="image" src="https://github.com/user-attachments/assets/dbb365fa-986b-4791-8f0b-8bb2ab60905b" />
+
+<img width="931" height="404" alt="image" src="https://github.com/user-attachments/assets/8be29be9-39ad-4bf8-a3f9-45591a9bd8e8" />
+
 
 ## How it works
 
