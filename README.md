@@ -49,4 +49,4 @@ The fractal is defined by an iterative formula in spherical coordinates (the cla
 
 **Gagan A Nair**
 - [Profile](https://gagagananair.netlify.app/)
-- [Email](gagananair1@gmail.com)
+- gagananair1@gmail.com
