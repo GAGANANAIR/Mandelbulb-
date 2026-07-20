@@ -12,6 +12,7 @@ A raymarched Mandelbulb — a 3D fractal rendered live in the browser using WebG
 - Mouse/touch orbit camera with scroll/pinch zoom
 - Auto-drift camera motion (toggleable)
 - Live telemetry: rays per frame, average march steps, frame time
+- Optoion for save also
 
 ## Running it
 
