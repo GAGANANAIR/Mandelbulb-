@@ -56,7 +56,7 @@ $$z_{n+1} = z_n^{\,p} + c$$
 
 where the power operation $z^p$ is defined by converting $z = (x, y, z)$ to spherical coordinates,
 
-$$r = |z|, \qquad \theta = \cos^{-1}\!\left(\frac{z_z}{r}\right), \qquad \phi = \operatorname{atan2}(z_y, z_x)$$
+$$r = |z|, \qquad \theta = \cos^{-1}\!\left(\frac{z_z}{r}\right), \qquad \phi = \text{atan2}(z_y, z_x)$$
 
 then scaling the radius and multiplying the angles by the power $p$:
 
