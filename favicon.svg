@@ -1,10 +1,31 @@
 <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
   <rect width="64" height="64" rx="10" fill="#09060f"/>
-  <circle cx="32" cy="32" r="9" fill="#c9903f"/>
-  <circle cx="20" cy="24" r="5" fill="#8fc4c9" opacity="0.85"/>
-  <circle cx="44" cy="24" r="5" fill="#8fc4c9" opacity="0.85"/>
-  <circle cx="20" cy="42" r="5" fill="#8fc4c9" opacity="0.85"/>
-  <circle cx="44" cy="42" r="5" fill="#8fc4c9" opacity="0.85"/>
-  <circle cx="32" cy="14" r="4" fill="#7a5a2e" opacity="0.7"/>
-  <circle cx="32" cy="50" r="4" fill="#7a5a2e" opacity="0.7"/>
+  
+  <!-- Central golden sphere -->
+  <circle cx="32" cy="32" r="14" fill="#d4a574"/>
+  
+  <!-- Top accent circle - brown -->
+  <circle cx="32" cy="14" r="6" fill="#8b6f47"/>
+  
+  <!-- Top-left cyan circle -->
+  <circle cx="20" cy="22" r="7" fill="#7dd3d3"/>
+  
+  <!-- Top-right cyan circle -->
+  <circle cx="44" cy="22" r="7" fill="#7dd3d3"/>
+  
+  <!-- Left small circle - teal -->
+  <circle cx="12" cy="32" r="5" fill="#5a9b9b"/>
+  
+  <!-- Right small circle - teal -->
+  <circle cx="52" cy="32" r="5" fill="#5a9b9b"/>
+  
+  <!-- Bottom-left cyan circle -->
+  <circle cx="20" cy="42" r="7" fill="#7dd3d3"/>
+  
+  <!-- Bottom-right cyan circle -->
+  <circle cx="44" cy="42" r="7" fill="#7dd3d3"/>
+  
+  <!-- Bottom accent circle - brown -->
+  <circle cx="32" cy="50" r="6" fill="#8b6f47"/>
 </svg>
