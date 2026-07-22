@@ -11,7 +11,7 @@
 <meta property="og:image" content="preview.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -249,7 +249,7 @@ float mengerDE(vec3 pos, out vec3 trapOut){
   vec3 trap = vec3(1e9);
   float d = sdBox(pos, vec3(1.0));
   float s = 1.0;
-  int depth = min(max(u_iter - 5, 2), 7);
+  int depth = int(clamp(float(u_iter - 5), 2.0, 7.0));
   for (int m = 0; m < 7; m++){
     if (m >= depth) break;
     vec3 a = mod(pos * s, 2.0) - 1.0;
@@ -274,7 +274,7 @@ float kifsDE(vec3 pos, out vec3 trapOut){
   vec3 trap = vec3(1e9);
   float scale = mix(1.5, 2.3, clamp((u_power - 2.0) / 14.0, 0.0, 1.0));
   vec3 offset = vec3(1.0, 1.0, 0.6);
-  int depth = min(max(u_iter, 4), 10);
+  int depth = int(clamp(float(u_iter), 4.0, 10.0));
   float totalScale = 1.0;
   for (int i = 0; i < 10; i++){
     if (i >= depth) break;
@@ -500,7 +500,7 @@ void main(){
 }
 </script>
 
-<script src="script.js?v=3"></script>
+<script src="script.js?v=4"></script>
 
 </body>
 </html>
