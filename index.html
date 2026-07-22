@@ -19,6 +19,7 @@
 
 <div id="boot"><div class="m">calibrating aperture&hellip;</div></div>
 <div id="err"></div>
+<div id="toast"></div>
 
 <div id="title">
   <div class="eyebrow">Signed-distance instrument No. 1</div>
@@ -30,6 +31,8 @@
   <div><span class="lbl">rays/frame</span><span id="tRays">—</span></div>
   <div><span class="lbl">march avg</span><span id="tSteps">—</span> steps</div>
   <div><span class="lbl">frame</span><span id="tFps">—</span> ms</div>
+  <div><span class="lbl">render scale</span><span id="tScale">—</span>x</div>
+  <div><span class="lbl">audio</span><span id="tAudio">off</span></div>
 </div>
 
 <div id="deck">
@@ -46,26 +49,49 @@
     <input type="range" id="hue" min="0" max="1" step="0.01" value="0.62">
   </div>
   <div class="dial">
+    <label>Bloom <span class="v" id="vBloom">0.60</span></label>
+    <input type="range" id="bloom" min="0" max="2" step="0.01" value="0.6">
+  </div>
+  <div class="dial">
+    <label>Depth of Field <span class="v" id="vDof">0.35</span></label>
+    <input type="range" id="dof" min="0" max="1" step="0.01" value="0.35">
+  </div>
+  <div class="dial" id="juliaDial" style="display:none">
+    <label>Julia C.x <span class="v" id="vJx">0.35</span></label>
+    <input type="range" id="jx" min="-1.2" max="1.2" step="0.01" value="0.35">
+    <label style="margin-top:8px">Julia C.y <span class="v" id="vJy">0.05</span></label>
+    <input type="range" id="jy" min="-1.2" max="1.2" step="0.01" value="0.05">
+  </div>
+  <div class="dial">
     <label>&nbsp;</label>
     <div class="toggles">
       <button class="toggle-btn active" id="spinBtn">Drift</button>
       <button class="toggle-btn" id="resetBtn">Reset</button>
       <button class="toggle-btn" id="saveBtn">Save</button>
     </div>
+    <div class="toggles" style="margin-top:6px">
+      <button class="toggle-btn" id="modeBtn">Bulb</button>
+      <button class="toggle-btn" id="micBtn">Mic</button>
+      <button class="toggle-btn" id="shareBtn">Share</button>
+    </div>
   </div>
 </div>
 
-<div id="hint">drag to orbit &middot; scroll to zoom &middot; <b>power</b> reshapes the fractal &middot; <b>depth</b> trades detail for speed &middot; <b>Space</b> toggles drift &middot; <b>R</b> reset</div>
+<div id="hint">drag to orbit &middot; scroll to zoom &middot; <b>power</b> reshapes the fractal &middot; <b>depth</b> trades detail for speed &middot; <b>mode</b> swaps fractal formula &middot; <b>Space</b> toggles drift &middot; <b>R</b> reset</div>
 
 <script id="vs" type="x-shader/x-vertex">
 attribute vec2 a_pos;
+varying vec2 v_uv;
 void main(){
+  v_uv = a_pos * 0.5 + 0.5;
   gl_Position = vec4(a_pos, 0.0, 1.0);
 }
 </script>
 
-<script id="fs" type="x-shader/x-fragment">
+<!-- ===================== PASS 1: scene (fractal + orbit-trap color + depth in alpha) ===================== -->
+<script id="fs-scene" type="x-shader/x-fragment">
 precision highp float;
+varying vec2 v_uv;
 
 uniform vec2 u_resolution;
 uniform vec3 u_camPos;
@@ -76,24 +102,35 @@ uniform float u_power;
 uniform int u_iter;
 uniform float u_hue;
 uniform float u_time;
+uniform int u_mode;       // 0 = Mandelbulb, 1 = Julia, 2 = Mandelbox
+uniform vec3 u_juliaC;
 
 const int MAX_ITER = 14;
 const int MAX_STEPS = 110;
 const float MAX_DIST = 16.0;
 const float SURF_EPS = 0.0009;
 
-// Signed distance estimate to the Mandelbulb surface, plus a soft
-// "orbit trap" style accumulator (od) used later for coloring.
-float mapDE(vec3 pos, out float trapOut){
+// Orbit-trap accumulator: distance to origin (trap.x), distance to the
+// nearest coordinate plane (trap.y), and distance to a fixed point (trap.z).
+// Combining these gives much richer, structure-following color than a
+// single scalar ever could.
+vec3 trapAccum(vec3 z, vec3 trap){
+  trap.x = min(trap.x, length(z));
+  trap.y = min(trap.y, min(abs(z.x), min(abs(z.y), abs(z.z))));
+  trap.z = min(trap.z, length(z - vec3(0.55, 0.35, -0.2)));
+  return trap;
+}
+
+float mandelbulbDE(vec3 pos, out vec3 trapOut){
   vec3 z = pos;
   float dr = 1.0;
   float r = 0.0;
-  float trap = 1e9;
+  vec3 trap = vec3(1e9);
   for (int i = 0; i < MAX_ITER; i++){
     if (i >= u_iter) break;
     r = length(z);
     if (r > 2.2) break;
-    trap = min(trap, r);
+    trap = trapAccum(z, trap);
 
     float theta = acos(clamp(z.z / max(r, 0.0001), -1.0, 1.0));
     float phi = atan(z.y, z.x);
@@ -110,8 +147,65 @@ float mapDE(vec3 pos, out float trapOut){
   return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
+// Julia variant: same spherical-power iteration, but the additive
+// constant is a fixed point in space rather than the sample position —
+// that's what turns a Mandelbulb-style map into a Julia set.
+float juliaDE(vec3 pos, out vec3 trapOut){
+  vec3 z = pos;
+  float dr = 1.0;
+  float r = 0.0;
+  vec3 trap = vec3(1e9);
+  for (int i = 0; i < MAX_ITER; i++){
+    if (i >= u_iter) break;
+    r = length(z);
+    if (r > 2.2) break;
+    trap = trapAccum(z, trap);
+
+    float theta = acos(clamp(z.z / max(r, 0.0001), -1.0, 1.0));
+    float phi = atan(z.y, z.x);
+    float zr = pow(r, u_power);
+    dr = pow(r, u_power - 1.0) * u_power * dr + 1.0;
+
+    theta *= u_power;
+    phi *= u_power;
+
+    z = zr * vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+    z += u_juliaC;
+  }
+  trapOut = trap;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
+}
+
+// Classic Mandelbox: box-fold + sphere-fold + scale, iterated.
+float mandelboxDE(vec3 pos, out vec3 trapOut){
+  vec4 z = vec4(pos, 1.0);
+  vec3 trap = vec3(1e9);
+  float scale = mix(1.6, 3.2, clamp((u_power - 2.0) / 14.0, 0.0, 1.0));
+  for (int i = 0; i < MAX_ITER; i++){
+    if (i >= u_iter) break;
+    z.xyz = clamp(z.xyz, -1.0, 1.0) * 2.0 - z.xyz;
+    float r2 = dot(z.xyz, z.xyz);
+    if (r2 < 0.25){
+      z *= 4.0;
+    } else if (r2 < 1.0){
+      z /= r2;
+    }
+    z.xyz = scale * z.xyz + pos;
+    z.w = scale * z.w + 1.0;
+    trap = trapAccum(z.xyz * 0.35, trap);
+  }
+  trapOut = trap;
+  return length(z.xyz) / abs(z.w);
+}
+
+float mapDE(vec3 pos, out vec3 trapOut){
+  if (u_mode == 1) return juliaDE(pos, trapOut);
+  if (u_mode == 2) return mandelboxDE(pos, trapOut);
+  return mandelbulbDE(pos, trapOut);
+}
+
 float mapD(vec3 p){
-  float t;
+  vec3 t;
   return mapDE(p, t);
 }
 
@@ -124,7 +218,6 @@ vec3 calcNormal(vec3 p){
   ));
 }
 
-// crude ambient occlusion by sampling the DE a few steps along the normal
 float calcAO(vec3 p, vec3 n){
   float occ = 0.0;
   float sca = 1.0;
@@ -150,34 +243,42 @@ float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k){
   return clamp(res, 0.0, 1.0);
 }
 
-vec3 palette(float t, float hueShift){
-  // deep bronze-to-teal gradient rather than a rainbow ramp
+// Orbit-trap driven palette: three trap channels each pick a hue lane,
+// so color follows the fractal's internal structure instead of a flat
+// distance ramp.
+vec3 palette(vec3 trap, float hueShift){
   vec3 a = vec3(0.10, 0.09, 0.14);
-  vec3 b = vec3(0.85, 0.62, 0.35);
-  vec3 c = vec3(0.55, 0.75, 0.78);
-  float h = fract(hueShift);
-  vec3 warm = mix(a, b, clamp(t * 1.6, 0.0, 1.0));
-  vec3 cool = mix(a, c, clamp(t * 1.6, 0.0, 1.0));
-  return mix(warm, cool, h);
+  vec3 warmA = vec3(0.85, 0.62, 0.35);
+  vec3 coolA = vec3(0.55, 0.75, 0.78);
+  vec3 accent = vec3(0.78, 0.35, 0.55);
+
+  float t1 = clamp(1.0 - trap.x, 0.0, 1.0);
+  float t2 = clamp(1.0 - trap.y * 2.2, 0.0, 1.0);
+  float t3 = clamp(1.0 - trap.z * 1.4, 0.0, 1.0);
+
+  vec3 warm = mix(a, warmA, t1 * 1.4);
+  vec3 cool = mix(a, coolA, t1 * 1.4);
+  vec3 base = mix(warm, cool, fract(hueShift));
+  base = mix(base, accent, t2 * 0.45);
+  base += accent * t3 * 0.25;
+  return base;
 }
 
 void main(){
-  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+  vec2 uv = (v_uv * u_resolution - 0.5 * u_resolution) / u_resolution.y;
 
   vec3 ro = u_camPos;
   vec3 rd = normalize(uv.x * u_camRight + uv.y * u_camUp + 1.7 * u_camFwd);
 
   float t = 0.0;
-  float steps = 0.0;
-  float trap = 1e9;
+  vec3 trap = vec3(1e9);
   bool hit = false;
   vec3 p;
 
   for (int i = 0; i < MAX_STEPS; i++){
     p = ro + rd * t;
-    float tt;
+    vec3 tt;
     float d = mapDE(p, tt);
-    steps += 1.0;
     if (d < SURF_EPS){ hit = true; trap = tt; break; }
     t += d * 0.92;
     if (t > MAX_DIST) break;
@@ -185,6 +286,7 @@ void main(){
 
   vec3 col;
   vec3 voidCol = vec3(0.035, 0.024, 0.055) * (1.0 - 0.4*length(uv));
+  float depthNorm = 1.0;
 
   if (hit){
     vec3 n = calcNormal(p);
@@ -194,21 +296,111 @@ void main(){
     float ao = calcAO(p, n);
     float fres = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 3.0);
 
-    vec3 base = palette(1.0 - clamp(trap, 0.0, 1.0), u_hue);
+    vec3 base = palette(trap, u_hue);
     vec3 ambient = base * 0.25 * ao;
     vec3 direct = base * diff * sh * 1.15;
     vec3 rim = vec3(0.9, 0.85, 0.7) * fres * 0.35 * ao;
 
     col = ambient + direct + rim;
-    col = col / (col + vec3(1.0)); // simple filmic tonemap
     col = pow(col, vec3(0.85));
-    // depth fog into the void
     float fog = smoothstep(6.0, 14.0, t);
     col = mix(col, voidCol, fog);
+    depthNorm = clamp(t / MAX_DIST, 0.0, 1.0);
   } else {
     col = voidCol + vec3(0.02,0.015,0.03) * smoothstep(1.0, 0.0, length(uv));
   }
 
+  gl_FragColor = vec4(col, depthNorm);
+}
+</script>
+
+<!-- ===================== PASS 2: bright-pass + horizontal blur (bloom, low-res) ===================== -->
+<script id="fs-bloomh" type="x-shader/x-fragment">
+precision highp float;
+varying vec2 v_uv;
+uniform sampler2D u_tex;
+uniform vec2 u_srcTexel;
+
+vec3 sampleBright(vec2 uv){
+  vec3 c = texture2D(u_tex, clamp(uv, 0.0, 1.0)).rgb;
+  float lum = dot(c, vec3(0.299, 0.587, 0.114));
+  return c * smoothstep(0.55, 0.9, lum);
+}
+
+void main(){
+  vec2 step = vec2(u_srcTexel.x * 2.0, 0.0);
+  vec3 sum = sampleBright(v_uv) * 0.227027;
+  sum += sampleBright(v_uv + step) * 0.1945946;
+  sum += sampleBright(v_uv - step) * 0.1945946;
+  sum += sampleBright(v_uv + step * 2.0) * 0.1216216;
+  sum += sampleBright(v_uv - step * 2.0) * 0.1216216;
+  sum += sampleBright(v_uv + step * 3.0) * 0.054054;
+  sum += sampleBright(v_uv - step * 3.0) * 0.054054;
+  sum += sampleBright(v_uv + step * 4.0) * 0.016216;
+  sum += sampleBright(v_uv - step * 4.0) * 0.016216;
+  gl_FragColor = vec4(sum, 1.0);
+}
+</script>
+
+<!-- ===================== PASS 3: vertical blur (bloom, low-res) ===================== -->
+<script id="fs-bloomv" type="x-shader/x-fragment">
+precision highp float;
+varying vec2 v_uv;
+uniform sampler2D u_tex;
+uniform vec2 u_srcTexel;
+
+vec3 sampleC(vec2 uv){ return texture2D(u_tex, clamp(uv, 0.0, 1.0)).rgb; }
+
+void main(){
+  vec2 step = vec2(0.0, u_srcTexel.y * 2.0);
+  vec3 sum = sampleC(v_uv) * 0.227027;
+  sum += sampleC(v_uv + step) * 0.1945946;
+  sum += sampleC(v_uv - step) * 0.1945946;
+  sum += sampleC(v_uv + step * 2.0) * 0.1216216;
+  sum += sampleC(v_uv - step * 2.0) * 0.1216216;
+  sum += sampleC(v_uv + step * 3.0) * 0.054054;
+  sum += sampleC(v_uv - step * 3.0) * 0.054054;
+  sum += sampleC(v_uv + step * 4.0) * 0.016216;
+  sum += sampleC(v_uv - step * 4.0) * 0.016216;
+  gl_FragColor = vec4(sum, 1.0);
+}
+</script>
+
+<!-- ===================== PASS 4: composite — depth-of-field resolve + bloom add + tonemap ===================== -->
+<script id="fs-composite" type="x-shader/x-fragment">
+precision highp float;
+varying vec2 v_uv;
+uniform sampler2D u_scene;
+uniform sampler2D u_bloom;
+uniform vec2 u_sceneTexel;
+uniform float u_focus;
+uniform float u_dofStrength;
+uniform float u_bloomStrength;
+
+void main(){
+  vec4 center = texture2D(u_scene, v_uv);
+  float depth = center.a;
+  float coc = clamp(abs(depth - u_focus) * u_dofStrength * 40.0, 0.0, 6.0);
+
+  vec3 col;
+  if (coc < 0.4 || u_dofStrength <= 0.001){
+    col = center.rgb;
+  } else {
+    vec3 sum = center.rgb;
+    float wsum = 1.0;
+    for (int i = 0; i < 8; i++){
+      float ang = float(i) * 0.7853981634;
+      vec2 off = vec2(cos(ang), sin(ang)) * u_sceneTexel * coc;
+      sum += texture2D(u_scene, clamp(v_uv + off, 0.0, 1.0)).rgb;
+      wsum += 1.0;
+    }
+    col = sum / wsum;
+  }
+
+  vec3 bloom = texture2D(u_bloom, v_uv).rgb * u_bloomStrength;
+  col += bloom;
+  col = col / (col + vec3(1.0));
+  col = pow(col, vec3(0.9));
   gl_FragColor = vec4(col, 1.0);
 }
 </script>
