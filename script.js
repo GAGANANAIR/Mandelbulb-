@@ -221,7 +221,7 @@
   const micBtn = document.getElementById('micBtn');
   const shareBtn = document.getElementById('shareBtn');
 
-  const MODE_NAMES = ['Bulb', 'Julia', 'Box'];
+  const MODE_NAMES = ['Bulb', 'Julia', 'Box', 'Bulb2', 'Menger', 'Kifs'];
 
   const state = {
     power: 8.0, iter: 9, hue: 0.62,
