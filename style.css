@@ -165,6 +165,15 @@
   }
   #toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  .preset-select{
+    font-family: inherit; font-size: 11px; letter-spacing: 0.04em;
+    background: var(--void-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 3px;
+    padding: 5px 8px; margin-top: 6px; width: 100%;
+    cursor: pointer;
+  }
+  .preset-select:focus{ outline: none; border-color: var(--brass-dim); }
+
   @media (max-width: 720px){
     #deck{ flex-wrap: wrap; width: calc(100% - 24px); left:12px; right:12px; transform:none; gap:6px; padding: 12px 14px; }
     .dial{ min-width: 42%; border-right:none; padding: 6px 8px; }
