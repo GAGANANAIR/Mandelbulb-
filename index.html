@@ -198,9 +198,92 @@ float mandelboxDE(vec3 pos, out vec3 trapOut){
   return length(z.xyz) / abs(z.w);
 }
 
+// Power-2 Mandelbulb: identical iteration to the main bulb, but the
+// exponent is locked to 2 for the classic smooth, rounder "torus-lobed"
+// look rather than the sharper power-8 default.
+float bulb2DE(vec3 pos, out vec3 trapOut){
+  vec3 z = pos;
+  float dr = 1.0;
+  float r = 0.0;
+  vec3 trap = vec3(1e9);
+  const float p2 = 2.0;
+  for (int i = 0; i < MAX_ITER; i++){
+    if (i >= u_iter) break;
+    r = length(z);
+    if (r > 2.2) break;
+    trap = trapAccum(z, trap);
+
+    float theta = acos(clamp(z.z / max(r, 0.0001), -1.0, 1.0)) * p2;
+    float phi = atan(z.y, z.x) * p2;
+    float zr = pow(r, p2);
+    dr = pow(r, p2 - 1.0) * p2 * dr + 1.0;
+
+    z = zr * vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+    z += pos;
+  }
+  trapOut = trap;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
+}
+
+float sdBox(vec3 p, vec3 b){
+  vec3 d = abs(p) - b;
+  return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+}
+
+// Menger Sponge: repeatedly carve cross-shaped notches out of a cube at
+// increasing scale, folding space with mod() so one carve pass stands in
+// for infinitely many copies.
+float mengerDE(vec3 pos, out vec3 trapOut){
+  vec3 trap = vec3(1e9);
+  float d = sdBox(pos, vec3(1.0));
+  float s = 1.0;
+  int depth = clamp(u_iter - 5, 2, 7);
+  for (int m = 0; m < 7; m++){
+    if (m >= depth) break;
+    vec3 a = mod(pos * s, 2.0) - 1.0;
+    s *= 3.0;
+    vec3 r = abs(1.0 - 3.0 * abs(a));
+    float da = max(r.x, r.y);
+    float db = max(r.y, r.z);
+    float dc = max(r.z, r.x);
+    float c = (min(da, min(db, dc)) - 1.0) / s;
+    d = max(d, c);
+    trap = trapAccum(a, trap);
+  }
+  trapOut = trap;
+  return d;
+}
+
+// Kaleidoscopic IFS: fold space into a single wedge with abs()/swap, then
+// scale-and-translate away from an offset corner. A handful of these
+// folds stacked together produces intricate, alien lattice structures.
+float kifsDE(vec3 pos, out vec3 trapOut){
+  vec3 p = pos;
+  vec3 trap = vec3(1e9);
+  float scale = mix(1.5, 2.3, clamp((u_power - 2.0) / 14.0, 0.0, 1.0));
+  vec3 offset = vec3(1.0, 1.0, 0.6);
+  int depth = clamp(u_iter, 4, 10);
+  float totalScale = 1.0;
+  for (int i = 0; i < 10; i++){
+    if (i >= depth) break;
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    if (p.y < p.z) p.yz = p.zy;
+    p = scale * p - offset * (scale - 1.0);
+    totalScale *= scale;
+    trap = trapAccum(p * 0.4, trap);
+  }
+  trapOut = trap;
+  return length(p) / totalScale;
+}
+
 float mapDE(vec3 pos, out vec3 trapOut){
   if (u_mode == 1) return juliaDE(pos, trapOut);
   if (u_mode == 2) return mandelboxDE(pos, trapOut);
+  if (u_mode == 3) return bulb2DE(pos, trapOut);
+  if (u_mode == 4) return mengerDE(pos, trapOut);
+  if (u_mode == 5) return kifsDE(pos, trapOut);
   return mandelbulbDE(pos, trapOut);
 }
 
