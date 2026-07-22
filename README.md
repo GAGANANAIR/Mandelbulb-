@@ -7,6 +7,7 @@ A raymarched fractal instrument — 3D fractals rendered live in the browser usi
 ## What it does
 
 - Renders **6 different fractal types**, switchable live (see below)
+- **6 named presets** (Classic Gold, Cosmic Blue, Alien Venom, Ember Core, Void Crystal, Magma Box) — instantly load a ready-made look instead of hand-tuning sliders
 - Real-time controls: **Power** (reshapes the fractal), **Depth** (iteration count vs. speed), **Hue** (color palette), **Bloom**, **Depth of Field**
 - Multi-pass rendering pipeline: scene pass → bloom (bright-pass + blur) → depth-of-field composite → filmic tonemap
 - Soft shadows, ambient occlusion, and orbit-trap-driven coloring for a moody, cinematic look
@@ -31,6 +32,21 @@ Click the mode button (bottom-right of the control deck) to cycle through:
 | **Menger** | Menger Sponge — cube repeatedly carved with cross-shaped notches at increasing scale |
 | **Kifs** | Kaleidoscopic IFS — space folded into a single wedge and scaled outward, producing intricate lattice structures |
 
+## Presets
+
+Instead of hand-tuning every slider, pick a ready-made look from the **Preset** dropdown:
+
+| Preset | Fractal mode | Vibe |
+|---|---|---|
+| **Classic Gold** | Bulb | Original warm bronze/gold Mandelbulb |
+| **Cosmic Blue** | Bulb | Cooler blue palette, stronger bloom |
+| **Alien Venom** | Julia | Toxic green Julia-set variant |
+| **Ember Core** | Bulb2 | Smooth power-2 shape, deep red/orange, heavy bloom |
+| **Void Crystal** | Menger | Cool teal Menger Sponge, tight depth of field |
+| **Magma Box** | Box | Molten red Mandelbox at high power |
+
+Choosing a preset sets the fractal mode, power, hue, bloom, and depth-of-field values in one click. Moving any slider afterward automatically switches the dropdown back to **"Custom"**, so it always reflects whether you're on a named look or your own tweak.
+
 ## Running it
 
 Just open `index.html` in any modern browser with WebGL support — no build step, no dependencies.
@@ -53,6 +69,7 @@ open index.html   # or just double-click it
 | Bloom slider | Controls how strongly bright areas glow |
 | Depth of Field slider | Blurs areas away from the focal point |
 | Mode button | Cycles through the 6 fractal types |
+| Preset dropdown | Instantly loads one of 6 named looks |
 | Drift button (or Space) | Toggles automatic camera rotation |
 | Reset button (or R) | Restores default camera and parameters |
 | Save button | Downloads the current frame as a PNG |
