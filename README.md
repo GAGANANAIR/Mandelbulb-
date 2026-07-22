@@ -77,7 +77,7 @@ That's the exact `0.5 * log(r) * r / dr` line in `mapDE()`. Sphere tracing then 
 **Surface normals**, needed for shading, shadows, and ambient occlusion, come for free from the same DE: they're just its numerical gradient, sampled with tiny offsets around the hit point.
 
 ## Author
-
+ 
 **Gagan A Nair**
 - [Profile](https://gagagananair.netlify.app/)
 - gagananair1@gmail.com
