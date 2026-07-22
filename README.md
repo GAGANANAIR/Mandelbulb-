@@ -118,7 +118,17 @@ That's the exact `0.5 * log(r) * r / dr` line in `mapDE()`. Sphere tracing then 
 
 **Menger Sponge** works differently: instead of an escape-time iteration, space itself is folded with `mod()` at increasing scale, and each fold carves a cross-shaped notch out of the current box using a standard box signed-distance function. **Kaleidoscopic IFS** folds space into a single symmetric wedge using `abs()` and axis swaps, then repeatedly scales outward from a fixed offset — a handful of these folds stacked together is enough to produce an intricate, self-similar lattice.
 
+**Mandelbox** is also a folding fractal rather than an escape-time one. Each iteration first clamps every coordinate into $[-1, 1]$ and reflects it (a *box fold*), then applies a *sphere fold*: points closer than radius $0.5$ to the origin are inflated by $4\times$, points between $0.5$ and $1$ are inverted by $1/r^2$, and everything is finally scaled and re-offset by the sample position. Tracking a scalar $w$ alongside the 3D point through these folds gives a cheap, consistent distance estimate: $\text{DE}(c) \approx |z| / |w|$.
+
+**Coloring** doesn't come from a flat distance ramp — every fractal accumulates an *orbit trap* while iterating: the closest the sequence ever gets to the origin, to a coordinate plane, and to a fixed reference point. Those three running minimums are combined into a color in `palette()`, so hue and saturation trace the fractal's internal structure instead of just its silhouette.
+
+**The render pipeline** runs as four full-screen passes: (1) render the scene into a texture with depth packed into the alpha channel, (2) extract bright pixels above a threshold and blur them horizontally (a 9-tap Gaussian), (3) blur vertically to finish the bloom, (4) composite everything — blurring out-of-focus regions based on the packed depth value, adding the bloom texture back in, then applying a Reinhard-style tonemap ($\text{color} / (\text{color} + 1)$) so bright highlights compress smoothly instead of clipping.
+
 **Surface normals**, needed for shading, shadows, and ambient occlusion, come for free from the same DE: they're just its numerical gradient, sampled with tiny offsets around the hit point.
+
+### A WebGL1 gotcha worth knowing
+
+GLSL ES 1.00 (the shader language WebGL1 uses) only defines `min()`, `max()`, and `clamp()` for `float` and vector types — **there is no integer overload**, even though the language has an `int` type. Writing `clamp(someInt, 2, 7)` compiles fine in most other shader languages (GLSL ES 3.00 / WebGL2, HLSL, desktop GLSL) but fails outright here. The fix is to cast through `float` and back: `int(clamp(float(x), 2.0, 7.0))`. This project's Menger and Kifs depth-limiting logic hit exactly this bug during development.
 
 ## Author
 
